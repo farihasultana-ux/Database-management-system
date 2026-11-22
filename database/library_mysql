@@ -1,0 +1,73 @@
+-- =====================================================================
+-- LibraTrack - Library Book Management System
+-- Database Management System LAB project
+-- Dialect : MySQL 8.x (MySQL Workbench / phpMyAdmin / XAMPP)
+-- Same tables, keys and sample data as library_sqlite.sql
+-- =====================================================================
+
+DROP DATABASE IF EXISTS library_db;
+CREATE DATABASE library_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE library_db;
+
+-- Parent table -------------------------------------------------------
+CREATE TABLE categories (
+    category_id   INT          NOT NULL AUTO_INCREMENT,
+    category_name VARCHAR(60)  NOT NULL,
+    PRIMARY KEY (category_id),
+    UNIQUE KEY uq_category_name (category_name)
+) ENGINE = InnoDB;
+
+-- Child table (category_id is a FOREIGN KEY) -------------------------
+CREATE TABLE books (
+    book_id      INT           NOT NULL AUTO_INCREMENT,
+    isbn         VARCHAR(20)   NOT NULL,
+    title        VARCHAR(150)  NOT NULL,
+    author       VARCHAR(100)  NOT NULL,
+    category_id  INT           NOT NULL,
+    publish_year SMALLINT      NOT NULL,
+    price        DECIMAL(10,2) NOT NULL,
+    status       ENUM('Available', 'Borrowed', 'Reserved') NOT NULL DEFAULT 'Available',
+    added_on     DATE          NOT NULL,
+    PRIMARY KEY (book_id),
+    UNIQUE KEY uq_isbn (isbn),
+    CONSTRAINT chk_year  CHECK (publish_year BETWEEN 1000 AND 2100),
+    CONSTRAINT chk_price CHECK (price >= 0),
+    CONSTRAINT fk_books_category FOREIGN KEY (category_id)
+        REFERENCES categories (category_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_books_category ON books (category_id);
+CREATE INDEX idx_books_status   ON books (status);
+
+-- Sample data: categories (7 rows) -----------------------------------
+INSERT INTO categories (category_name) VALUES
+    ('Computer Science'),
+    ('Fiction'),
+    ('Science'),
+    ('History'),
+    ('Business'),
+    ('Poetry'),
+    ('Children');
+
+-- Sample data: books (15 rows) ---------------------------------------
+INSERT INTO books (isbn, title, author, category_id, publish_year, price, status, added_on) VALUES
+    ('978-0-262-04630-5', 'Introduction to Algorithms',   'Thomas H. Cormen',              1, 2022, 1850.00, 'Available', '2026-10-02'),
+    ('978-0-07-802215-9', 'Database System Concepts',    'Abraham Silberschatz',          1, 2019, 1650.00, 'Borrowed',  '2026-10-04'),
+    ('978-0-13-235088-4', 'Clean Code',                  'Robert C. Martin',              1, 2008, 1200.00, 'Available', '2026-10-06'),
+    ('978-1-71850-270-3', 'Python Crash Course',         'Eric Matthes',                  1, 2023, 1400.00, 'Reserved',  '2026-10-09'),
+    ('978-984-0-1001-1',  'Pather Panchali',             'Bibhutibhushan Bandyopadhyay',  2, 1929,  350.00, 'Available', '2026-10-11'),
+    ('978-984-0-1002-8',  'Lalsalu',                     'Syed Waliullah',                2, 1948,  280.00, 'Borrowed',  '2026-10-13'),
+    ('978-0-06-231500-7', 'The Alchemist',               'Paulo Coelho',                  2, 1988,  420.00, 'Available', '2026-10-15'),
+    ('978-0-553-38016-3', 'A Brief History of Time',     'Stephen Hawking',               3, 1988,  650.00, 'Borrowed',  '2026-10-18'),
+    ('978-0-345-53943-4', 'Cosmos',                      'Carl Sagan',                    3, 1980,  720.00, 'Available', '2026-10-21'),
+    ('978-0-19-929115-1', 'The Selfish Gene',            'Richard Dawkins',               3, 1976,  580.00, 'Available', '2026-10-24'),
+    ('978-0-06-231609-7', 'Sapiens',                     'Yuval Noah Harari',             4, 2011,  890.00, 'Reserved',  '2026-10-27'),
+    ('978-0-393-31755-8', 'Guns, Germs, and Steel',      'Jared Diamond',                 4, 1997,  810.00, 'Available', '2026-10-30'),
+    ('978-0-8041-3929-8', 'Zero to One',                 'Peter Thiel',                   5, 2014,  760.00, 'Available', '2026-11-03'),
+    ('978-984-0-1003-5',  'Gitanjali',                   'Rabindranath Tagore',           6, 1910,  300.00, 'Borrowed',  '2026-11-06'),
+    ('978-984-0-1004-2',  'Agnibeena',                   'Kazi Nazrul Islam',             6, 1922,  260.00, 'Available', '2026-11-09');
+
+-- Quick check --------------------------------------------------------
+SELECT COUNT(*) AS total_books, AVG(price) AS avg_price FROM books;
